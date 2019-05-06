@@ -18,15 +18,12 @@ class Crack(object):
         出现正常200但是没有结果
         第一次解密出来是错误的
     """
-    def __init__(self):
+    def __init__(self, url, test_url):
         with open(r'wc_js.js', encoding='utf-8') as f:
             wc_js = f.read()
         self.wc_js = execjs.compile(wc_js)
-        self.url = "http://www.gsxt.gov.cn/"
-        # self.url = 'http://www.mps.gov.cn/'
-
-        self.test_url = "http://www.gsxt.gov.cn/index.html"
-        # self.test_url = 'http://www.mps.gov.cn/'
+        self.url = url
+        self.test_url = test_url
 
         # 固定user_agent,后台使用user-agent验证cookies, 之后的访问也需要使用这个
         self.headers = {
@@ -54,8 +51,8 @@ class Crack(object):
         """
         x = re.findall('var x="(.*?)"', first_js)[0]
         y = re.findall(',y="(.*?)"', first_js)[0]
-        x, y, z = self.wc_js.call('get_z', x, y)
-        second_js = self.wc_js.call('get_js', x, y, z)
+        second_js = self.wc_js.call('once_js', x, y)
+        # second_js = self.wc_js.call('get_js', x, y, z)
         return second_js
 
     def second_decryption_one(self, second_js):
@@ -119,8 +116,8 @@ class Crack(object):
         js = js.split('GMT;Path=/;')[0] + "'"
 
         # 替换可能出现的window
-        js = re.sub("!!window\['__p' \+ 'hantom' \+ 'as'\]", 'false', js)
-        js = re.sub("!!window\['_p'\+'hantom'\]", 'false', js)
+        js = re.sub("!!\s*?window\['__p' \+ 'hantom' \+ 'as'\]", 'false', js)
+        js = re.sub("!!\s*?window\['_p'\+'hantom'\]", 'false', js)
 
         s = """
             function cook() {
@@ -154,20 +151,29 @@ class Crack(object):
             first_js, jsluid = self.acquire_js()
             second_js = self.first_decryption(first_js)
             try:
-                jsl_clearance = self.second_decryption_one(second_js)
+                try:
+                    jsl_clearance = self.second_decryption_one(second_js)
+                except:
+                    jsl_clearance = self.second_decryption_two(second_js)
             except:
-                jsl_clearance = self.second_decryption_two(second_js)
-
-            code = self.test_cookies(jsluid, jsl_clearance)
-            if code == 200:
-                return jsluid, jsl_clearance
-            else:
-                print(code)
+                # print(first_js)
+                # print(second_js)
                 continue
+            else:
+                code = self.test_cookies(jsluid, jsl_clearance)
+                if code == 200:
+                    return jsluid, jsl_clearance
+                else:
+                    print(code)
+                    continue
 
 
 if __name__ == '__main__':
-    ck = Crack()
+    url = "http://www.gsxt.gov.cn/"
+    test_url = "http://www.gsxt.gov.cn/index.html"
+    # url = 'http://www.mps.gov.cn/'
+    # test_url = 'http://www.mps.gov.cn/'
+    ck = Crack(url, test_url)
 
     jsluid, jsl_clearance = ck.run()
     print('jsluid:', jsluid)
