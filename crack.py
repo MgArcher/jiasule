@@ -85,7 +85,7 @@ class Crack(object):
         # 替换可能出现的window
         js = re.sub("!!window\['__p' \+ 'hantom' \+ 'as'\]", 'false', js)
         js = re.sub("!!window\['_p'\+'hantom'\]", 'false', js)
-
+        js = re.sub("!window\['_p' \+ 'hantom'\]", 'true', js)
         s = """
             function cook() {
             %s
@@ -93,7 +93,6 @@ class Crack(object):
             }
             """
         new_js = s % js
-
         ctx = execjs.compile(new_js)
         # 切割获得的__jsl_clearance
         jsl = ctx.call('cook')
@@ -118,6 +117,7 @@ class Crack(object):
         # 替换可能出现的window
         js = re.sub("!!\s*?window\['__p' \+ 'hantom' \+ 'as'\]", 'false', js)
         js = re.sub("!!\s*?window\['_p'\+'hantom'\]", 'false', js)
+        js = re.sub("!window\['_p' \+ 'hantom'\]", 'true', js)
 
         s = """
             function cook() {
@@ -144,20 +144,25 @@ class Crack(object):
         headers = self.headers.copy()
         headers['Cookie'] = f'__jsluid={jsluid}; __jsl_clearance={jsl_clearance};'
         response = requests.get(self.test_url, headers=headers)
+        print(response.text)
         return response.status_code
 
     def run(self):
         while True:
             first_js, jsluid = self.acquire_js()
             second_js = self.first_decryption(first_js)
+            # print(second_js)
+            # try:
+            #     jsl_clearance = self.second_decryption_one(second_js)
+            # except:
+            #     jsl_clearance = self.second_decryption_two(second_js)
+            # print(jsl_clearance)
             try:
                 try:
                     jsl_clearance = self.second_decryption_one(second_js)
                 except:
                     jsl_clearance = self.second_decryption_two(second_js)
             except:
-                # print(first_js)
-                # print(second_js)
                 continue
             else:
                 code = self.test_cookies(jsluid, jsl_clearance)
@@ -173,6 +178,8 @@ if __name__ == '__main__':
     test_url = "http://www.gsxt.gov.cn/index.html"
     # url = 'http://www.mps.gov.cn/'
     # test_url = 'http://www.mps.gov.cn/'
+    # url = "http://www.cyicai.com/information/applyForSubscription"
+    # test_url = 'http://www.cyicai.com/information/applyForSubscription'
     ck = Crack(url, test_url)
 
     jsluid, jsl_clearance = ck.run()
