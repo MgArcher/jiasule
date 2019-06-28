@@ -56,14 +56,17 @@ class Crack(object):
         return second_js
 
     def regex(self, js):
-        regex =  "window\[.*?\]"
+        regex =  "!*window\[.*?\]"
         find = re.findall(regex, js)
         if find:
             for f in find:
-                if 'callP' in f:
-                    js = js.replace(f, 'undefined')
+                if '!' in f:
+                    if len(re.findall('!', f)) % 2 == 0:
+                        js = js.replace(f, 'false')
+                    else:
+                        js = js.replace(f, 'true')
                 else:
-                    js = js.replace(f, 'false')
+                    js = js.replace(f, 'undefined')
         return js
 
     def replace_url(self, js):
@@ -114,7 +117,6 @@ class Crack(object):
         jsl = jsl.split(';')[0]
         jsl_clearance = jsl.split('=')[1]
         return jsl_clearance
-
 
     def test_cookies(self, jsluid, jsl_clearance):
         """
