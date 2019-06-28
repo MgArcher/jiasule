@@ -55,52 +55,33 @@ class Crack(object):
         # second_js = self.wc_js.call('get_js', x, y, z)
         return second_js
 
-    def second_decryption_one(self, second_js):
-        """
-        把第二层js准换成本地可以运行的js
-        !!!此处可能会出错!!!
-        :param second_js: 第一次解密的js
-        :return: __jsl_clearance的值
-        """
-        # 转义字符
-        js = second_js.replace('\\\\', '\\')
+    def regex(self, js):
+        regex =  "window\[.*?\]"
+        find = re.findall(regex, js)
+        if find:
+            for f in find:
+                if 'callP' in f:
+                    js = js.replace(f, 'undefined')
+                else:
+                    js = js.replace(f, 'false')
+        return js
 
-        # 切割
-        js = 'cookie' + js.split('document.cookie')[1]
-        js = js.split('GMT;Path=/;')[0] + "'"
-
-        #替换1
+    def replace_url(self, js):
+        # 替换1
         # 取出两个变量名
         _3d = re.findall("(var .{0,5}=)document\.createElement\('div'\);", js)
         _2b = re.findall("(var .{0,5}=).{0,5}\.match\(/https\?:\\\/\\\//\)\[0\];", js)
 
         # 替换成要访问的url
-        js = re.sub("var .{0,5}=document\.createElement\('div'\);", _3d[0] + f'"{self.url.replace("http://", "")}";', js)
+        js = re.sub("var .{0,5}=document\.createElement\('div'\);", _3d[0] + f'"{self.url.replace("http://", "")}";',
+                    js)
         js = re.sub("_.{0,5}\.innerHTML='<a href=.{0,25}</a>';", "", js)
         js = re.sub("_.{0,5}=.{0,5}\.firstChild\.href;", "", js)
         js = re.sub("var .{0,5}=.{0,5}\.match\(/https\?:\\\/\\\//\)\[0\];", _2b[0] + '"http://";', js)
         js = re.sub("_.{0,5}=.{0,5}\.substr\(.{0,5}\.length\)\.toLowerCase\(\);", "", js)
+        return js
 
-
-        # 替换可能出现的window
-        js = re.sub("!!window\['__p' \+ 'hantom' \+ 'as'\]", 'false', js)
-        js = re.sub("!!window\['_p'\+'hantom'\]", 'false', js)
-        js = re.sub("!window\['_p' \+ 'hantom'\]", 'true', js)
-        s = """
-            function cook() {
-            %s
-            return cookie
-            }
-            """
-        new_js = s % js
-        ctx = execjs.compile(new_js)
-        # 切割获得的__jsl_clearance
-        jsl = ctx.call('cook')
-        jsl = jsl.split(';')[0]
-        jsl_clearance = jsl.split('=')[1]
-        return jsl_clearance
-
-    def second_decryption_two(self, second_js):
+    def second_decryption(self, second_js):
         """
         把第二层js准换成本地可以运行的js
         !!!此处可能会出错!!!
@@ -114,10 +95,11 @@ class Crack(object):
         js = 'cookie' + js.split('document.cookie')[1]
         js = js.split('GMT;Path=/;')[0] + "'"
 
+        if re.findall("(var .{0,5}=)document\.createElement\('div'\);", js):
+            js = self.replace_url(js)
+
         # 替换可能出现的window
-        js = re.sub("!!\s*?window\['__p' \+ 'hantom' \+ 'as'\]", 'false', js)
-        js = re.sub("!!\s*?window\['_p'\+'hantom'\]", 'false', js)
-        js = re.sub("!window\['_p' \+ 'hantom'\]", 'true', js)
+        js = self.regex(js)
 
         s = """
             function cook() {
@@ -126,13 +108,13 @@ class Crack(object):
             }
             """
         new_js = s % js
-
         ctx = execjs.compile(new_js)
         # 切割获得的__jsl_clearance
         jsl = ctx.call('cook')
         jsl = jsl.split(';')[0]
         jsl_clearance = jsl.split('=')[1]
         return jsl_clearance
+
 
     def test_cookies(self, jsluid, jsl_clearance):
         """
@@ -144,36 +126,32 @@ class Crack(object):
         headers = self.headers.copy()
         headers['Cookie'] = f'__jsluid={jsluid}; __jsl_clearance={jsl_clearance};'
         response = requests.get(self.test_url, headers=headers)
-        print(response.text)
+
         return response.status_code
 
     def run(self):
         while True:
             first_js, jsluid = self.acquire_js()
             second_js = self.first_decryption(first_js)
-            # print(second_js)
-            # try:
-            #     jsl_clearance = self.second_decryption_one(second_js)
-            # except:
-            #     jsl_clearance = self.second_decryption_two(second_js)
-            # print(jsl_clearance)
             try:
-                try:
-                    jsl_clearance = self.second_decryption_one(second_js)
-                except:
-                    jsl_clearance = self.second_decryption_two(second_js)
+                jsl_clearance = self.second_decryption(second_js)
             except:
+                print(second_js)
                 continue
             else:
                 code = self.test_cookies(jsluid, jsl_clearance)
+
                 if code == 200:
                     return jsluid, jsl_clearance
                 else:
                     print(code)
+                    print(second_js)
                     continue
 
 
 if __name__ == '__main__':
+    # url = "http://www.66ip.cn/2.html"
+    # test_url = "http://www.66ip.cn/2.html"
     url = "http://www.gsxt.gov.cn/"
     test_url = "http://www.gsxt.gov.cn/index.html"
     # url = 'http://www.mps.gov.cn/'
