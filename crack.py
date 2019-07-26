@@ -152,16 +152,18 @@ class Crack(object):
 
 
 if __name__ == '__main__':
+    # # 企业信息公示系统
     url = "http://www.gsxt.gov.cn/index.html"
     test_url = "http://www.gsxt.gov.cn/index.html"
 
+    # # 66代理
     # url = "http://www.66ip.cn/2.html"
     # test_url = "http://www.66ip.cn/2.html"
 
+    # # 公安部网站
     # url = 'http://www.mps.gov.cn/'
     # test_url = 'http://www.mps.gov.cn/'
-    # url = "http://www.cyicai.com/information/applyForSubscription"
-    # test_url = 'http://www.cyicai.com/information/applyForSubscription'
+
     ck = Crack(url, test_url)
     jsluid, jsl_clearance = ck.run()
     print('jsluid:', jsluid)
