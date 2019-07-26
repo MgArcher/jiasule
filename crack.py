@@ -67,6 +67,7 @@ class Crack(object):
                         js = js.replace(f, 'true')
                 else:
                     js = js.replace(f, 'undefined')
+        js = js.replace('window.headless', 'undefined')
         return js
 
     def replace_url(self, js):
@@ -126,9 +127,9 @@ class Crack(object):
         :return:
         """
         headers = self.headers.copy()
-        headers['Cookie'] = f'__jsluid={jsluid}; __jsl_clearance={jsl_clearance};'
+        headers['Cookie'] = f'__jsluid_h={jsluid}; __jsl_clearance={jsl_clearance};'
         response = requests.get(self.test_url, headers=headers)
-
+        print(response.text)
         return response.status_code
 
     def run(self):
@@ -142,7 +143,6 @@ class Crack(object):
                 continue
             else:
                 code = self.test_cookies(jsluid, jsl_clearance)
-
                 if code == 200:
                     return jsluid, jsl_clearance
                 else:
@@ -152,16 +152,17 @@ class Crack(object):
 
 
 if __name__ == '__main__':
+    url = "http://www.gsxt.gov.cn/index.html"
+    test_url = "http://www.gsxt.gov.cn/index.html"
+
     # url = "http://www.66ip.cn/2.html"
     # test_url = "http://www.66ip.cn/2.html"
-    url = "http://www.gsxt.gov.cn/"
-    test_url = "http://www.gsxt.gov.cn/index.html"
+
     # url = 'http://www.mps.gov.cn/'
     # test_url = 'http://www.mps.gov.cn/'
     # url = "http://www.cyicai.com/information/applyForSubscription"
     # test_url = 'http://www.cyicai.com/information/applyForSubscription'
     ck = Crack(url, test_url)
-
     jsluid, jsl_clearance = ck.run()
     print('jsluid:', jsluid)
     print('jsl_clearance:', jsl_clearance)
