@@ -139,7 +139,7 @@ class Crack(object):
             try:
                 jsl_clearance = self.second_decryption(second_js)
             except:
-                print(second_js)
+                # print(second_js)
                 continue
             else:
                 code = self.test_cookies(jsluid, jsl_clearance)
@@ -147,7 +147,7 @@ class Crack(object):
                     return jsluid, jsl_clearance
                 else:
                     print(code)
-                    print(second_js)
+                    # print(second_js)
                     continue
 
 
