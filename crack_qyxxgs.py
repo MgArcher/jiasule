@@ -186,7 +186,7 @@ class Crack(object):
         second_js = self.first_decryption(first_js)
         jsl_clearance = self.second_decryption(second_js)
         print(jsluid, jsl_clearance)
-        JSESSIONID = self.get_first_JSESSIONID(jsluid, jsl_clearance)
+        JSESSIONID = self.get_first_JSESSIONID(jsluid, jsl_clea0rance)
         print(JSESSIONID)
         JSESSIONID = self.get_JSESSIONID(jsluid, jsl_clearance, JSESSIONID)
         code = self.test_cookies(jsluid, jsl_clearance, JSESSIONID)
@@ -199,6 +199,6 @@ if __name__ == '__main__':
 
     ck = Crack(url, test_url)
     jsluid, jsl_clearance, JSESSIONID = ck.run()
-    print('jsluid:', jsluid)
-    print('jsl_clearance:', jsl_clearance)
+    print('__jsluid_h:', jsluid)
+    print('__jsl_clearance:', jsl_clearance)
     print('JSESSIONID:', JSESSIONID)
