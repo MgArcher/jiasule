@@ -59,3 +59,9 @@ while (z++) try {
     return g
 } catch(_) {}
 }
+
+
+function demo() {
+    return 123;
+
+}
